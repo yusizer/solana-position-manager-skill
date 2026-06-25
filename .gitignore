@@ -1,0 +1,27 @@
+# macOS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Node / tooling
+node_modules/
+package-lock.json
+yarn.lock
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Local env / secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Test / runtime artifacts
+*.log
+tmp/
+.cache/
