@@ -22,6 +22,7 @@ Load the focused files below **only when the task needs them** (progressive, tok
 | "Should I rebalance?" / rebalance plan | [`rebalance.md`](rebalance.md) | [`range-alerts.md`](range-alerts.md) |
 | "Execute the rebalance" | [`rebalance.md`](rebalance.md) | the protocol file (SDK tx order) + [`../rules/safe-rebalance.md`](../rules/safe-rebalance.md) |
 | "Set up alerts / monitoring" | [`monitoring.md`](monitoring.md) | [`range-alerts.md`](range-alerts.md) |
+| "Auto-alert via Claude Code hook" | [`hooks.md`](hooks.md) | [`monitoring.md`](monitoring.md) |
 | "Backtest this range" / fee APR vs HODL | [`backtest.md`](backtest.md) | [`impermanent-loss.md`](impermanent-loss.md) |
 | "Links / SDK packages / program IDs" | [`resources.md`](resources.md) | — |
 

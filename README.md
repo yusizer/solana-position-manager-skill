@@ -45,6 +45,58 @@ whirlpools.md   raydium-clmm.md  meteora-dlmm.md   impermanent-loss.md range-ale
 
 The skill references the core `solana-dev-skill` for program/CLI/testing basics and only loads the file relevant to the current step.
 
+## Verified program IDs & SDK (2026)
+
+Every program ID and SDK function below is checked against the official SDK repos/docs (see `skill/resources.md` for sources); unverified items are marked there, not invented.
+
+| Protocol | Program ID | SDK (2026) | Position model |
+|---|---|---|---|
+| Orca Whirlpools | `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc` | `@orca-so/whirlpools` 8.0.1 (+ `_client` 7.0.0, `_core` 3.1.0); Rust `orca_whirlpools` 8.0.0 | tick range, 216-byte `Position`; `resetPositionRangeInstructions` shifts range in place |
+| Raydium CLMM | mainnet `CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK` / devnet `DRayAUgENGQBKVaX8owNhgzkEDyoHTGVEGHVJT1E9pfH` | `@raydium-io/raydium-sdk-v2` 0.2.55-alpha; Rust CPI `raydium_amm_v3` (git) | NFT-bound `PersonalPositionState`; range change = close + open |
+| Meteora DLMM (`lb_clmm` 0.12.0) | `LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo` | `@meteora-ag/dlmm` 1.9.10; Rust `commons` 0.3.3 | discrete bins; **atomic `rebalancePosition`** (claim+remove+resize+add in one ix) |
+
+## How it compares to kit skills
+
+| | This skill | `ext/sendai` (DeFi) | `ext/helius` (infra) | `ext/jupiter` (swaps) | `ext/meteora` (SDK) |
+|---|---|---|---|---|---|
+| LP position lifecycle | ✅ end-to-end | ❌ primitives | ❌ RPC/DAS | ❌ swaps/lend | snippets only |
+| Impermanent-loss math | ✅ tested | ❌ | ❌ | ❌ | ❌ |
+| Out-of-range alerts | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Rebalance decision | ✅ (HOLD/WIDEN/MOVE/WITHDRAW) | ❌ | ❌ | ❌ | ❌ |
+| 3 CLMM/DLMM protocols | ✅ | partial | ❌ | ❌ | 1 |
+
+No existing kit skill covers the LP position lifecycle; closest references are swap/SDK-snippet level.
+
+## When NOT to use this skill
+
+- **Spot trading / swaps** — use `jup-ag/agent-skills`, not a position manager.
+- **Perpetuals / futures** — CLMM/DLMM ranges are spot AMM mechanics; perps are a different product.
+- **Lone staking / single-sided lending** — no range, no IL of this kind.
+- **Set-and-forget full-range v2 LP** — IL is v2-style (λ=1); a position manager adds little. Full-range is the degenerate case of every formula here.
+- **Executing rebalances blind** — this skill always simulates first (`rules/safe-rebalance.md`); if you want auto-execution without sign-off, that is explicitly out of scope.
+
+## Verification
+
+| Check | Result |
+|---|---|
+| `python tests/test_il.py` | 16 / 16 IL-math tests pass (incl. v2-amplification cross-check) |
+| `python tests/test_fetch.py` | 9 / 9 position-decode + analysis tests pass |
+| `./validate.sh` | structure + intra-skill links: all pass |
+| CI (`.github/workflows/validate.yml`) | validate + tests + installer dry-run on every push/PR |
+| Program IDs | verified against `declare_id!` in each protocol's SDK repo |
+| IL formulas | verified by reduction to v2 (full-range) + worked numeric examples |
+
+## Default stack (2026)
+
+| Layer | Default |
+|---|---|
+| RPC | Helius (free tier, DAS + parsed history) — read-only for monitoring |
+| SDK | `@orca-so/whirlpools` 8.x, `@raydium-io/raydium-sdk-v2` 0.2.55, `@meteora-ag/dlmm` 1.9.10 |
+| IL math | pure-Python `examples/il_math.py` (zero deps) — also implemented in `examples/dlmm` TS |
+| Price (USD) | Jupiter Price API v3 / Birdeye / GeckoTerminal |
+| Rebalance trigger | drift > 0.95 (RED) or feeRatio < \|IL\| (`skill/range-alerts.md`) |
+| Monitoring | cron / GitHub Actions / in-process; Claude Code `Stop` hook (`skill/hooks.md`) |
+
 ## Skill files
 
 | File | What it gives the agent |
@@ -59,6 +111,7 @@ The skill references the core `solana-dev-skill` for program/CLI/testing basics 
 | `skill/rebalance.md` | Rebalance decision heuristics: widen vs move vs withdraw; gas-vs-fees tradeoff; anti-over-rebalance. |
 | `skill/backtest.md` | Fee APR, IL, return-vs-HODL; historical tick/fee data sources; evaluation metrics. |
 | `skill/monitoring.md` | Scheduled fetch + alert wiring (Helius/RPC, webhooks, cron). |
+| `skill/hooks.md` | Opt-in Claude Code `Stop` hook for auto-alerts on out-of-range drift. |
 | `skill/resources.md` | SDK packages, program IDs, official docs, data providers. |
 
 ## Agents
@@ -115,11 +168,13 @@ This skill ships runnable artifacts so the IL math and installer are **tested**,
 
 - `examples/il_math.py` — pure-Python implementation of the concentrated-IL formulas in `skill/impermanent-loss.md` (zero deps).
 - `examples/il_calc.py` — CLI calculator. `python examples/il_calc.py --pa 140 --pb 210 --p0 170 --p 200 --principal 10000 --fees 320`.
+- `examples/fetch_position.py` — **real read-only Solana RPC**: `getAccountInfo` + decode the verified 216-byte Orca `Position` layout (stdlib only, no npm), then in-range / drift / IL. `python examples/fetch_position.py --offline --current-tick 0 --open-tick 0 --json`.
 - `examples/dlmm/` — runnable TypeScript reference on the real `@meteora-ag/dlmm` SDK: `monitor.ts` (read-only out-of-range alerts) + `rebalance.ts` (atomic rebalance, simulate-only). See `examples/dlmm/README.md`.
-- `tests/test_il.py` — unit tests pinning the worked example and edge cases (out-of-range above/below, L-independence, fee break-even, v2-amplification cross-check). `python tests/test_il.py` → 16 passing.
-- `.github/workflows/validate.yml` — CI runs `validate.sh` + the tests + an installer dry-run on every push/PR.
+- `hooks/range-alert-hook.sh` — opt-in Claude Code `Stop` hook (see `skill/hooks.md`).
+- `tests/test_il.py` + `tests/test_fetch.py` — 25 unit tests total (IL math + position decode + CLI smoke). `python tests/test_il.py && python tests/test_fetch.py`.
+- `.github/workflows/validate.yml` — CI runs `validate.sh` + all tests + an installer dry-run on every push/PR.
 - `validate.sh` — structure, required-files, and intra-skill link check.
-- `assets/architecture.svg` — the measure → monitor → decide → execute loop, for docs/PRs.
+- `assets/architecture.svg` + `assets/preview-card.svg` — diagrams for docs/PRs.
 
 ```bash
 ./validate.sh               # structure + links

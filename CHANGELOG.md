@@ -2,6 +2,19 @@
 
 All notable changes to this skill are documented here. Versions follow the skill's `skill/SKILL.md` `name` lifecycle.
 
+## [0.3.0] — 2026-06-25
+
+### Added — competitive hardening (vs skill-bounty #49–53)
+- `examples/fetch_position.py` — real read-only Solana RPC client (stdlib only): `getAccountInfo` + decode the verified 216-byte Orca Whirlpools `Position` layout, then in-range / drift / IL. `--offline` fixture for tests.
+- `tests/test_fetch.py` — 9 tests (Position decode, base58 roundtrip, analyze in/out-of-range, CLI smoke). Total tests now 25.
+- `hooks/range-alert-hook.sh` + `skill/hooks.md` — opt-in Claude Code `Stop` hook for auto-alerts on out-of-range drift (no competitor uses hooks). Always exits 0, bounded, read-only.
+- `assets/preview-card.svg` — 1200×630 preview card for skill listings.
+- README: "Verified program IDs & SDK (2026)" table, "How it compares to kit skills" table, "When NOT to use this skill", "Verification" matrix, "Default stack (2026)" table.
+- CI runs `tests/test_fetch.py` + `fetch_position.py --offline` smoke.
+
+### Changed
+- `skill/SKILL.md` routing adds "Auto-alert via Claude Code hook" → `hooks.md`.
+
 ## [0.2.0] — 2026-06-25
 
 ### Added
