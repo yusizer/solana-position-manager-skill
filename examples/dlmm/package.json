@@ -1,0 +1,27 @@
+{
+  "name": "solana-position-manager-dlmm-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reference DLMM position monitor + atomic rebalance using @meteora-ag/dlmm (part of solana-position-manager-skill).",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "monitor": "tsx monitor.ts",
+    "monitor:once": "tsx monitor.ts -- --once",
+    "rebalance": "tsx rebalance.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@meteora-ag/dlmm": "^1.9.10",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.95.3",
+    "bn.js": "^5.2.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "@types/bn.js": "^5.1.6",
+    "@types/node": "^22.10.2"
+  }
+}

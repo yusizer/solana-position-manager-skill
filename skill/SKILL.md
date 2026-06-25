@@ -18,6 +18,7 @@ Load the focused files below **only when the task needs them** (progressive, tok
 | "Where are my positions?" / fetch a position | [`whirlpools.md`](whirlpools.md) · [`raydium-clmm.md`](raydium-clmm.md) · [`meteora-dlmm.md`](meteora-dlmm.md) (pick the protocol) | — |
 | "Am I in range?" / out-of-range check | the protocol file above | [`range-alerts.md`](range-alerts.md) |
 | "What's my impermanent loss?" | [`impermanent-loss.md`](impermanent-loss.md) | the protocol file (for current tick/price) |
+| "Which range width? / IL by range" | [`benchmarks.md`](benchmarks.md) | [`impermanent-loss.md`](impermanent-loss.md) |
 | "Should I rebalance?" / rebalance plan | [`rebalance.md`](rebalance.md) | [`range-alerts.md`](range-alerts.md) |
 | "Execute the rebalance" | [`rebalance.md`](rebalance.md) | the protocol file (SDK tx order) + [`../rules/safe-rebalance.md`](../rules/safe-rebalance.md) |
 | "Set up alerts / monitoring" | [`monitoring.md`](monitoring.md) | [`range-alerts.md`](range-alerts.md) |

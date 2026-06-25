@@ -1,6 +1,13 @@
 # solana-position-manager-skill
 
+![CI](https://github.com/yusizer/solana-position-manager-skill/actions/workflows/validate.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-14f195.svg)
+![Tests: 16](https://img.shields.io/badge/tests-16%20passing-9945ff.svg)
+![Solana](https://img.shields.io/badge/Solana-CLMM%2FDLMM-14f195.svg)
+
 A Claude Code / Codex skill addon for **managing concentrated-liquidity (CLMM/DLMM) positions on Solana** across **Orca Whirlpools**, **Raydium CLMM**, and **Meteora DLMM**.
+
+<p align="center"><img src="assets/architecture.svg" alt="Position manager skill architecture" width="780"></p>
 
 It extends the core [`solana-dev-skill`](https://github.com/solanabr/solana-dev-skill) with a focused discipline that nobody in the kit covers end-to-end: the **lifecycle of an LP position** — from fetching it, to measuring impermanent loss, to detecting out-of-range drift, to deciding and safely executing a rebalance, to monitoring it on a schedule.
 
@@ -47,6 +54,7 @@ The skill references the core `solana-dev-skill` for program/CLI/testing basics 
 | `skill/raydium-clmm.md` | Raydium CLMM: Position NFT layout, SDK, tick math, in-range, fees, rebalance. |
 | `skill/meteora-dlmm.md` | Meteora DLMM: bin model, dynamic fees, position layout, SDK, in-range by active bin, rebalance. |
 | `skill/impermanent-loss.md` | Concentrated-IL math, worked example, how it differs from v2 IL, how to compute it from tick/price. |
+| `skill/benchmarks.md` | Verified IL-by-range-width table (λ amplification) + range-choice decision shortcut. |
 | `skill/range-alerts.md` | Out-of-range detection, distance-from-tick thresholds, fee-to-principal ratio alerts. |
 | `skill/rebalance.md` | Rebalance decision heuristics: widen vs move vs withdraw; gas-vs-fees tradeoff; anti-over-rebalance. |
 | `skill/backtest.md` | Fee APR, IL, return-vs-HODL; historical tick/fee data sources; evaluation metrics. |
@@ -107,9 +115,11 @@ This skill ships runnable artifacts so the IL math and installer are **tested**,
 
 - `examples/il_math.py` — pure-Python implementation of the concentrated-IL formulas in `skill/impermanent-loss.md` (zero deps).
 - `examples/il_calc.py` — CLI calculator. `python examples/il_calc.py --pa 140 --pb 210 --p0 170 --p 200 --principal 10000 --fees 320`.
-- `tests/test_il.py` — unit tests pinning the worked example and edge cases (out-of-range above/below, L-independence, fee break-even). `python tests/test_il.py`.
+- `examples/dlmm/` — runnable TypeScript reference on the real `@meteora-ag/dlmm` SDK: `monitor.ts` (read-only out-of-range alerts) + `rebalance.ts` (atomic rebalance, simulate-only). See `examples/dlmm/README.md`.
+- `tests/test_il.py` — unit tests pinning the worked example and edge cases (out-of-range above/below, L-independence, fee break-even, v2-amplification cross-check). `python tests/test_il.py` → 16 passing.
 - `.github/workflows/validate.yml` — CI runs `validate.sh` + the tests + an installer dry-run on every push/PR.
 - `validate.sh` — structure, required-files, and intra-skill link check.
+- `assets/architecture.svg` — the measure → monitor → decide → execute loop, for docs/PRs.
 
 ```bash
 ./validate.sh               # structure + links

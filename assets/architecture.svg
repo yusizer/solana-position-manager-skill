@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="420" viewBox="0 0 880 420" font-family="Inter, Segoe UI, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#0f1a2e"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#14f195"/>
+      <stop offset="1" stop-color="#9945ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8ab4f8"/>
+    </marker>
+  </defs>
+
+  <rect width="880" height="420" rx="16" fill="url(#bg)"/>
+  <text x="40" y="48" font-size="22" font-weight="700" fill="#e8edf5">solana-position-manager-skill</text>
+  <text x="40" y="72" font-size="13" fill="#8ab4f8">CLMM/DLMM position lifecycle — Orca · Raydium · Meteora</text>
+
+  <!-- loop -->
+  <g font-size="14" font-weight="600" fill="#0b1220">
+    <g>
+      <rect x="60"  y="130" width="150" height="56" rx="12" fill="#14f195"/>
+      <text x="135" y="164" text-anchor="middle">1 · FETCH</text>
+    </g>
+    <g>
+      <rect x="250" y="130" width="150" height="56" rx="12" fill="#9945ff"/>
+      <text x="325" y="156" text-anchor="middle" fill="#fff">2 · MEASURE</text>
+      <text x="325" y="174" text-anchor="middle" fill="#fff" font-size="11" font-weight="400">IL · in-range · fees</text>
+    </g>
+    <g>
+      <rect x="440" y="130" width="150" height="56" rx="12" fill="#14f195"/>
+      <text x="515" y="164" text-anchor="middle">3 · DECIDE</text>
+    </g>
+    <g>
+      <rect x="630" y="130" width="190" height="56" rx="12" fill="#9945ff"/>
+      <text x="725" y="156" text-anchor="middle" fill="#fff">4 · EXECUTE</text>
+      <text x="725" y="174" text-anchor="middle" fill="#fff" font-size="11" font-weight="400">simulate → sign</text>
+    </g>
+  </g>
+
+  <!-- arrows -->
+  <g stroke="#8ab4f8" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <line x1="210" y1="158" x2="248" y2="158"/>
+    <line x1="400" y1="158" x2="438" y2="158"/>
+    <line x1="590" y1="158" x2="628" y2="158"/>
+    <path d="M725 186 C 725 250, 135 250, 135 188" stroke-dasharray="4 4"/>
+  </g>
+  <text x="430" y="270" text-anchor="middle" font-size="11" fill="#6b7a99">monitor loop · alerts on drift / threshold breach</text>
+
+  <!-- protocols -->
+  <text x="40" y="320" font-size="13" font-weight="600" fill="#e8edf5">Protocols</text>
+  <g font-size="12" fill="#cfe0ff">
+    <rect x="40"  y="335" width="180" height="34" rx="8" fill="#16233d" stroke="#1f3358"/>
+    <text x="130" y="357" text-anchor="middle">Orca Whirlpools (ticks)</text>
+    <rect x="240" y="335" width="180" height="34" rx="8" fill="#16233d" stroke="#1f3358"/>
+    <text x="330" y="357" text-anchor="middle">Raydium CLMM (ticks)</text>
+    <rect x="440" y="335" width="220" height="34" rx="8" fill="#16233d" stroke="#1f3358"/>
+    <text x="550" y="357" text-anchor="middle">Meteora DLMM (bins · atomic rebalance)</text>
+  </g>
+
+  <!-- quality chips -->
+  <g font-size="11" fill="#0b1220" font-weight="600">
+    <rect x="680" y="335" width="70" height="24" rx="12" fill="#14f195"/>
+    <text x="715" y="351" text-anchor="middle">16 tests</text>
+    <rect x="758" y="335" width="62" height="24" rx="12" fill="#9945ff"/>
+    <text x="789" y="351" text-anchor="middle" fill="#fff">CI</text>
+  </g>
+
+  <rect x="0" y="0" width="880" height="6" fill="url(#acc)"/>
+</svg>
