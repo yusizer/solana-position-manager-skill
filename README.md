@@ -87,7 +87,7 @@ No existing kit skill covers the LP position lifecycle; closest references are s
 | `npm run typecheck` (`examples/dlmm`) | DLMM TS example compiles clean vs real `@meteora-ag/dlmm` (`tsc --noEmit`) |
 | `./validate.sh` | structure + intra-skill links: all pass |
 | CI (`.github/workflows/validate.yml`) | validate + IL + decode + **eval** + **tsc** + installer dry-run on every push/PR |
-| Live site | GitHub Pages landing — `docs/index.html` + `deploy-pages.yml` |
+| Live site | https://yusizer.github.io/solana-position-manager-skill/ (GitHub Pages, `docs/index.html`) |
 | Program IDs | verified against `declare_id!` / SDK docs in each protocol's repo |
 | IL formulas | verified by reduction to v2 (full-range) + worked numeric examples |
 

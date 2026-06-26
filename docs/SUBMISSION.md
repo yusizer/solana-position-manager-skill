@@ -42,7 +42,7 @@ This skill is the first to bundle measure → monitor → rebalance with real co
 ## Links to attach
 - PR: https://github.com/solanabr/skill-bounty/pull/54
 - Repo: https://github.com/yusizer/solana-position-manager-skill
-- Live site: https://yusizer.github.io/solana-position-manager-skill/ (enable Pages → Source: GitHub Actions after merge)
+- Live site: https://yusizer.github.io/solana-position-manager-skill/ (live — GitHub Pages)
 - Eval report: https://github.com/yusizer/solana-position-manager-skill/blob/main/docs/EVAL.md
 
 ## Contact
