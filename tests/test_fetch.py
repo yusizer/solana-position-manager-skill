@@ -109,6 +109,25 @@ def test_cli_offline_smoke():
     assert out["analysis"]["in_range"] is True
 
 
+def test_live_rpc_decode():
+    """Live-RPC path: fetch_account + decode_position against a REAL mainnet position.
+
+    Opt-in — only runs when SOLANA_RPC_URL and SOLANA_TEST_POSITION are set, otherwise
+    it skips. CI runs the offline-fixture decode above; this test exists so the 'real
+    read-only Solana RPC decoder' claim is guarded by an executable check, not asserted.
+    """
+    rpc = os.environ.get("SOLANA_RPC_URL")
+    pubkey = os.environ.get("SOLANA_TEST_POSITION")
+    if not rpc or not pubkey:
+        print("skip  test_live_rpc_decode (set SOLANA_RPC_URL + SOLANA_TEST_POSITION to run)")
+        return
+    data = fp.fetch_account(rpc, pubkey)
+    p = fp.decode_position(data)
+    assert p["tick_lower_index"] < p["tick_upper_index"], p
+    assert len(p["whirlpool"]) >= 32 and len(p["position_mint"]) >= 32
+    print("ok   test_live_rpc_decode (live fetch from %s, source=rpc)" % rpc)
+
+
 def _main():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0

@@ -2,10 +2,10 @@
 
 ![CI](https://github.com/yusizer/solana-position-manager-skill/actions/workflows/validate.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-14f195.svg)
-![Tests: 16](https://img.shields.io/badge/tests-16%20passing-9945ff.svg)
+![Tests: 26](https://img.shields.io/badge/tests-26%20passing-9945ff.svg)
 ![Solana](https://img.shields.io/badge/Solana-CLMM%2FDLMM-14f195.svg)
 
-A Claude Code / Codex skill addon for **managing concentrated-liquidity (CLMM/DLMM) positions on Solana** across **Orca Whirlpools**, **Raydium CLMM**, and **Meteora DLMM**.
+A Claude Code / Codex skill addon for **managing concentrated-liquidity (CLMM/DLMM) positions on Solana** across **Orca Whirlpools**, **Raydium CLMM**, and **Meteora DLMM** — with the constant-product baselines (**Raydium CPMM**, **Meteora DAMM v2**) scope-clarified as the v2 (λ=1) case.
 
 <p align="center"><img src="assets/architecture.svg" alt="Position manager skill architecture" width="780"></p>
 
@@ -54,6 +54,8 @@ Every program ID and SDK function below is checked against the official SDK repo
 | Orca Whirlpools | `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc` | `@orca-so/whirlpools` 8.0.1 (+ `_client` 7.0.0, `_core` 3.1.0); Rust `orca_whirlpools` 8.0.0 | tick range, 216-byte `Position`; `resetPositionRangeInstructions` shifts range in place |
 | Raydium CLMM | mainnet `CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK` / devnet `DRayAUgENGQBKVaX8owNhgzkEDyoHTGVEGHVJT1E9pfH` | `@raydium-io/raydium-sdk-v2` 0.2.55-alpha; Rust CPI `raydium_amm_v3` (git) | NFT-bound `PersonalPositionState`; range change = close + open |
 | Meteora DLMM (`lb_clmm` 0.12.0) | `LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo` | `@meteora-ag/dlmm` 1.9.10; Rust `commons` 0.3.3 | discrete bins; **atomic `rebalancePosition`** (claim+remove+resize+add in one ix) |
+| Raydium CPMM (constant-product) | `CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C` | `@raydium-io/raydium-sdk-v2` 0.2.55-alpha (`raydium.cpmm`) | fungible LP, **no concentration** — v2 baseline (λ=1) |
+| Meteora DAMM v2 (constant-product) | `cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG` | `@meteora-ag/cp-amm-sdk` 1.4.4 (class `CpAmm`) | NFT positions, no range — fetch/fees/claim in scope |
 
 ## How it compares to kit skills
 
@@ -63,7 +65,7 @@ Every program ID and SDK function below is checked against the official SDK repo
 | Impermanent-loss math | ✅ tested | ❌ | ❌ | ❌ | ❌ |
 | Out-of-range alerts | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Rebalance decision | ✅ (HOLD/WIDEN/MOVE/WITHDRAW) | ❌ | ❌ | ❌ | ❌ |
-| 3 CLMM/DLMM protocols | ✅ | partial | ❌ | ❌ | 1 |
+| 5 Solana AMM protocols (3 concentrated + 2 constant-product) | ✅ | partial | ❌ | ❌ | 1 (DLMM) |
 
 No existing kit skill covers the LP position lifecycle; closest references are swap/SDK-snippet level.
 
@@ -80,10 +82,13 @@ No existing kit skill covers the LP position lifecycle; closest references are s
 | Check | Result |
 |---|---|
 | `python tests/test_il.py` | 16 / 16 IL-math tests pass (incl. v2-amplification cross-check) |
-| `python tests/test_fetch.py` | 9 / 9 position-decode + analysis tests pass |
+| `python tests/test_fetch.py` | 10 / 10 position-decode + analysis tests pass (+ opt-in live-RPC test) |
+| `python tests/test_eval.py` | quantified eval: with-skill **24/24** vs baseline **10/24**; **0/12** false-positive triggers |
+| `npm run typecheck` (`examples/dlmm`) | DLMM TS example compiles clean vs real `@meteora-ag/dlmm` (`tsc --noEmit`) |
 | `./validate.sh` | structure + intra-skill links: all pass |
-| CI (`.github/workflows/validate.yml`) | validate + tests + installer dry-run on every push/PR |
-| Program IDs | verified against `declare_id!` in each protocol's SDK repo |
+| CI (`.github/workflows/validate.yml`) | validate + IL + decode + **eval** + **tsc** + installer dry-run on every push/PR |
+| Live site | GitHub Pages landing — `docs/index.html` + `deploy-pages.yml` |
+| Program IDs | verified against `declare_id!` / SDK docs in each protocol's repo |
 | IL formulas | verified by reduction to v2 (full-range) + worked numeric examples |
 
 ## Default stack (2026)
@@ -105,6 +110,8 @@ No existing kit skill covers the LP position lifecycle; closest references are s
 | `skill/whirlpools.md` | Orca Whirlpools: SDK, program ID, position layout, fetch, in-range check, fees, rebalance tx order. |
 | `skill/raydium-clmm.md` | Raydium CLMM: Position NFT layout, SDK, tick math, in-range, fees, rebalance. |
 | `skill/meteora-dlmm.md` | Meteora DLMM: bin model, dynamic fees, position layout, SDK, in-range by active bin, rebalance. |
+| `skill/meteora-damm-v2.md` | Meteora DAMM v2: constant-product, NFT positions, `CpAmm` SDK — fetch/fees/claim; why range/rebalance don't apply (λ=1). |
+| `skill/raydium-cpmm.md` | Raydium CPMM: constant-product, fungible LP — scope note (λ=1 full-range case). |
 | `skill/impermanent-loss.md` | Concentrated-IL math, worked example, how it differs from v2 IL, how to compute it from tick/price. |
 | `skill/benchmarks.md` | Verified IL-by-range-width table (λ amplification) + range-choice decision shortcut. |
 | `skill/range-alerts.md` | Out-of-range detection, distance-from-tick thresholds, fee-to-principal ratio alerts. |
@@ -168,17 +175,20 @@ This skill ships runnable artifacts so the IL math and installer are **tested**,
 
 - `examples/il_math.py` — pure-Python implementation of the concentrated-IL formulas in `skill/impermanent-loss.md` (zero deps).
 - `examples/il_calc.py` — CLI calculator. `python examples/il_calc.py --pa 140 --pb 210 --p0 170 --p 200 --principal 10000 --fees 320`.
-- `examples/fetch_position.py` — **real read-only Solana RPC**: `getAccountInfo` + decode the verified 216-byte Orca `Position` layout (stdlib only, no npm), then in-range / drift / IL. `python examples/fetch_position.py --offline --current-tick 0 --open-tick 0 --json`.
-- `examples/dlmm/` — runnable TypeScript reference on the real `@meteora-ag/dlmm` SDK: `monitor.ts` (read-only out-of-range alerts) + `rebalance.ts` (atomic rebalance, simulate-only). See `examples/dlmm/README.md`.
+- `examples/fetch_position.py` — read-only Solana RPC decoder: `getAccountInfo` + decode the verified 216-byte Orca `Position` layout (stdlib only, no npm), then in-range / drift / IL. **Live-RPC capable**; tests decode an offline fixture (CI-safe) plus an opt-in live test (`SOLANA_RPC_URL` + `SOLANA_TEST_POSITION`). `python examples/fetch_position.py --offline --current-tick 0 --open-tick 0 --json`.
+- `examples/dlmm/` — runnable TypeScript reference on the real `@meteora-ag/dlmm` SDK: `monitor.ts` (read-only out-of-range alerts) + `rebalance.ts` (atomic rebalance, simulate-only). `tsc --noEmit` clean; CI typechecks it. See `examples/dlmm/README.md`.
 - `hooks/range-alert-hook.sh` — opt-in Claude Code `Stop` hook (see `skill/hooks.md`).
-- `tests/test_il.py` + `tests/test_fetch.py` — 25 unit tests total (IL math + position decode + CLI smoke). `python tests/test_il.py && python tests/test_fetch.py`.
-- `.github/workflows/validate.yml` — CI runs `validate.sh` + all tests + an installer dry-run on every push/PR.
+- `tests/test_il.py` + `tests/test_fetch.py` — 26 unit tests total (16 IL math + 10 position decode + CLI smoke; incl. opt-in live-RPC). Plus `tests/test_eval.py` — quantified with-skill vs baseline eval suite. `python tests/test_il.py && python tests/test_fetch.py && python tests/test_eval.py`.
+- `.github/workflows/validate.yml` — CI runs `validate.sh` + IL + decode + **eval** + DLMM **tsc** typecheck + an installer dry-run on every push/PR.
+- `.github/workflows/deploy-pages.yml` — deploys a static landing page (`docs/index.html`) to GitHub Pages on push to `main`.
+- `docs/EVAL.md` — quantified evaluation report (methodology + per-task results). `docs/index.html` — live landing page.
 - `validate.sh` — structure, required-files, and intra-skill link check.
 - `assets/architecture.svg` + `assets/preview-card.svg` — diagrams for docs/PRs.
 
 ```bash
 ./validate.sh               # structure + links
-python tests/test_il.py     # 9 IL-math tests
+python tests/test_il.py     # 16 IL-math tests
+python tests/test_eval.py   # quantified eval (with-skill vs baseline)
 ```
 
 ## Development workflow

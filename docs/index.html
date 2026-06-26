@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>solana-position-manager-skill</title>
+<meta name="description" content="A Claude Code / Codex skill for managing concentrated-liquidity (CLMM/DLMM) LP positions on Solana — Orca Whirlpools, Raydium CLMM, Meteora DLMM. Measure → monitor → rebalance, with real IL math, current SDK calls, and safe execution rules.">
+<style>
+  :root { --g:#14f195; --bg:#0b1117; --card:#121a22; --line:#1f2a35; --muted:#8aa0b2; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#e6edf3;font:16px/1.55 -apple-system,Segoe UI,Roboto,Inter,sans-serif}
+  a{color:var(--g);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+  header{padding:54px 0 8px}
+  .eyebrow{color:var(--g);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+  h1{font-size:34px;margin:.2em 0 .1em;letter-spacing:-.01em}
+  .lede{color:var(--muted);font-size:18px;max-width:640px}
+  .badges{margin:18px 0 0;display:flex;gap:8px;flex-wrap:wrap}
+  .b{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:13px}
+  .b strong{color:var(--g)}
+  section{padding:30px 0;border-top:1px solid var(--line)}
+  h2{font-size:22px;margin:0 0 10px}
+  h3{font-size:17px;margin:22px 0 6px;color:#cfe3d8}
+  p,li{color:#cdd9e3}
+  ul{padding-left:18px;margin:8px 0}
+  code{background:#0d141b;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font:14px ui-monospace,SFMono-Regular,Menlo,monospace}
+  pre{background:#0d141b;border:1px solid var(--line);border-radius:8px;padding:14px;overflow:auto}
+  pre code{background:none;border:0;padding:0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card h4{margin:0 0 4px;font-size:15px;color:#e6edf3}
+  .card p{margin:0;font-size:13px;color:var(--muted)}
+  .card .tag{display:inline-block;margin-top:8px;font-size:12px;color:var(--g);border:1px solid var(--g);border-radius:4px;padding:1px 6px}
+  .tag.out{color:var(--muted);border-color:var(--line)}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+  th{background:#0d141b;color:#cfe3d8}
+  td.n{text-align:right;font-variant-numeric:tabular-nums}
+  .ok{color:var(--g)}
+  .num{font-size:30px;color:var(--g);font-weight:700}
+  footer{padding:26px 0 60px;color:var(--muted);font-size:13px}
+  img{max-width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Solana AI Kit · skill addon</div>
+  <h1>solana-position-manager-skill</h1>
+  <p class="lede">Manage concentrated-liquidity (CLMM/DLMM) LP positions on Solana — <strong>measure → monitor → rebalance</strong> — with real impermanent-loss math, current SDK calls, and safe execution rules.</p>
+  <div class="badges">
+    <span class="b"><strong>CI</strong> green</span>
+    <span class="b"><strong>26</strong> tests</span>
+    <span class="b"><strong>5</strong> AMM protocols</span>
+    <span class="b"><strong>MIT</strong></span>
+    <span class="b">eval <strong>24/24</strong> vs baseline 10/24</span>
+  </div>
+  <p style="margin-top:16px"><a href="https://github.com/yusizer/solana-position-manager-skill">GitHub repo →</a> &nbsp; · &nbsp; <a href="https://github.com/solanabr/skill-bounty/pull/54">PR #54 (skill-bounty) →</a> &nbsp; · &nbsp; <a href="docs/EVAL.md">Eval report →</a></p>
+</header>
+
+<section>
+  <h2>The problem</h2>
+  <p>Concentrated liquidity turns LPing into an active management job most builders get wrong: positions silently drift <em>out of range</em> and stop earning; <em>impermanent loss</em> is larger and non-obvious in narrow ranges; rebalancing is done by feel. Three protocols with different models (tick ranges vs discrete bins) make every script bespoke. No existing kit skill covers the LP position lifecycle end-to-end.</p>
+</section>
+
+<section>
+  <h2>What the skill gives an agent</h2>
+  <div class="grid">
+    <div class="card"><h4>Measure</h4><p>Real concentrated-IL math with the exact λ-amplification formula (capital efficiency = IL multiplier), unit-tested against worked examples.</p></div>
+    <div class="card"><h4>Monitor</h4><p>Out-of-range + drift detection (GREEN / YELLOW / RED), fee-to-principal alerts, opt-in Claude Code <code>Stop</code> hook.</p></div>
+    <div class="card"><h4>Rebalance</h4><p>HOLD / WIDEN / MOVE / WITHDRAW heuristics gated by fee-vs-IL — simulate before sign, never auto-execute.</p></div>
+    <div class="card"><h4>Execute</h4><p>Verified SDK tx order per protocol; atomic Meteora <code>rebalancePosition</code> (claim+remove+resize+add in one ix).</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Protocol coverage — the full Solana AMM landscape</h2>
+  <p>Three concentrated programs are managed end-to-end; two constant-product programs are covered as the v2 baseline (λ = 1) with an explicit scope explanation — so the skill knows what it does and does <em>not</em> actively manage.</p>
+  <div class="grid">
+    <div class="card"><h4>Orca Whirlpools</h4><p>Tick-range CLMM, 216-byte Position, <code>resetPositionRangeInstructions</code>.</p><span class="tag">concentrated · managed</span></div>
+    <div class="card"><h4>Raydium CLMM</h4><p>Tick-range CLMM, Position NFT, close+open range change.</p><span class="tag">concentrated · managed</span></div>
+    <div class="card"><h4>Meteora DLMM</h4><p>Bin-based, dynamic fees, atomic rebalance, limit orders.</p><span class="tag">concentrated · managed</span></div>
+    <div class="card"><h4>Raydium CPMM</h4><p>Constant-product, fungible LP — full-range v2 case (λ=1).</p><span class="tag out">scope-clarified</span></div>
+    <div class="card"><h4>Meteora DAMM v2</h4><p>Constant-product, NFT positions — fetch / fees / claim in scope.</p><span class="tag out">scope-clarified</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>The λ-amplification formula (why concentrated IL is bigger)</h2>
+  <p>The same factor that boosts fee APR boosts IL. For a symmetric range <code>[1/k, k]</code>:</p>
+  <pre><code>IL_v3(r) = λ · IL_v2(r),   λ = √k / (√k − 1)        // capital efficiency = IL multiplier
+IL_v2(r) = 2√r / (1 + r) − 1                          // full-range (λ → 1) ✓</code></pre>
+  <p>Range <code>[0.5, 2.0]</code> (λ ≈ 3.4) on a +21% move → −1.54% IL. Tight range <code>[0.8, 1.25]</code> (λ ≈ 9.5) on the same move → −4.28% IL. Implemented and pinned in <code>examples/il_math.py</code> + <code>tests/test_il.py</code>.</p>
+  <img src="assets/architecture.svg" alt="Position manager skill architecture: SKILL.md routes to whirlpools, raydium-clmm, meteora-dlmm, meteora-damm-v2, raydium-cpmm, impermanent-loss, range-alerts, rebalance, backtest, monitoring, hooks.">
+</section>
+
+<section>
+  <h2>Quantified evaluation</h2>
+  <p>Reproducible offline suite (<code>python tests/test_eval.py</code>, runs in CI) — with-skill vs a naive baseline across the LP lifecycle.</p>
+  <table>
+    <tr><th>Suite</th><th class="n">baseline</th><th class="n">with-skill</th><th class="n">tasks</th></tr>
+    <tr><td>IL computation</td><td class="n">1 / 6</td><td class="n ok">6 / 6</td><td class="n">6</td></tr>
+    <tr><td>In-range / drift level</td><td class="n">5 / 10</td><td class="n ok">10 / 10</td><td class="n">10</td></tr>
+    <tr><td>Rebalance decision</td><td class="n">4 / 8</td><td class="n ok">8 / 8</td><td class="n">8</td></tr>
+    <tr><td><strong>Total</strong></td><td class="n"><strong>10 / 24</strong></td><td class="n ok"><strong>24 / 24</strong></td><td class="n">24</td></tr>
+    <tr><td>Trigger false-positive (false-RED on margin-in-range)</td><td class="n">—</td><td class="n ok">0 / 12</td><td class="n">12</td></tr>
+  </table>
+  <p>Full methodology + per-task detail: <a href="docs/EVAL.md">docs/EVAL.md</a>.</p>
+</section>
+
+<section>
+  <h2>Install</h2>
+  <pre><code>git clone https://github.com/yusizer/solana-position-manager-skill.git
+cd solana-position-manager-skill
+./validate.sh && python tests/test_il.py && python tests/test_fetch.py && python tests/test_eval.py
+./install.sh -y</code></pre>
+</section>
+
+<footer>
+  solana-position-manager-skill · MIT © 2026 yusif ·
+  <a href="README.md">README</a> · <a href="docs/EVAL.md">Eval</a> ·
+  <a href="https://github.com/solanabr/skill-bounty/pull/54">PR #54</a> ·
+  Superteam "Solana AI Kit skill" bounty
+</footer>
+
+</div>
+</body>
+</html>

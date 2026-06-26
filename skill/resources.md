@@ -10,6 +10,8 @@ Quick lookup. All program IDs and package versions verified against official SDK
 | Raydium CLMM | Mainnet-beta | `CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK` |
 | Raydium CLMM | Devnet | `DRayAUgENGQBKVaX8owNhgzkEDyoHTGVEGHVJT1E9pfH` |
 | Meteora DLMM (`lb_clmm`) | Mainnet **and** Devnet | `LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo` |
+| Raydium CPMM (constant-product) | Mainnet-beta | `CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C` |
+| Meteora DAMM v2 (`cp-amm`) | Mainnet **and** Devnet | `cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG` |
 
 Do **not** confuse Raydium CLMM with AMM v4 `675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8`, CPMM `CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C`, or LaunchLab `LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj`.
 
@@ -21,6 +23,7 @@ Do **not** confuse Raydium CLMM with AMM v4 `675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24
 | Orca (legacy) | `@orca-so/whirlpools-sdk` (web3.js) | 0.21.0 | — |
 | Raydium | `@raydium-io/raydium-sdk-v2` (GPL-3.0) | 0.2.55-alpha | `raydium_amm_v3` (git, CPI) |
 | Meteora | `@meteora-ag/dlmm` | 1.9.10 | `commons` 0.3.3 (path) |
+| Meteora DAMM v2 | `@meteora-ag/cp-amm-sdk` (class `CpAmm`) | 1.4.4 | — |
 
 Orca's new SDK is on `@solana/kit` (web3.js moved to legacy). Meteora's on-chain `lb_clmm` source is closed; the SDK ships the IDL.
 
@@ -49,6 +52,9 @@ Orca's new SDK is on `@solana/kit` (web3.js moved to legacy). Meteora's on-chain
 **Meteora** (`@meteora-ag/dlmm`):
 `DLMM.create`, `DLMM.createMultiple`, `DLMM.getAllLbPairPositionsByUser`, `pool.getPositionsByUserAndLbPair`, `pool.getPosition`, `pool.getActiveBin`, `pool.getFeeInfo`, `pool.getDynamicFee`, `pool.removeLiquidity`, `pool.addLiquidityByStrategy`, `pool.initializePositionAndAddLiquidityByStrategy`, `pool.simulateRebalancePosition`, `pool.simulateRebalancePositionWithBalancedStrategy`, `pool.rebalancePosition`, `increasePositionLength`, `decreasePositionLength`, `pool.claimAllRewardsByPosition`, `DLMM.calculateFeeInfo`. Strategy builders: `BalancedStrategyBuilder`, `Spot/Curve/BidAskStrategyParameterBuilder`.
 
+**Meteora DAMM v2** (`@meteora-ag/cp-amm-sdk`, class `CpAmm` — constant-product, NFT positions):
+`new CpAmm(connection)`, `fetchPoolState`, `fetchPositionState`, `fetchPoolFees`, `getPositionsByUser`, `getUserPositionByPool`, `getAllPositions`, `getAllPositionsByPool`, `claimPositionFee` / `claimPositionFee2`, `claimReward`, `removeAllLiquidity` / `removeAllLiquidityAndClosePosition`, `createPositionAndAddLiquidity`, `closePosition`, `splitPosition` / `splitPosition2`, `mergePosition`, `lockPosition` / `permanentLockPosition`. Helpers: `getUnClaimLpFee`, `getPriceFromSqrtPrice` / `getSqrtPriceFromPrice`, `getQuote` / `getQuote2`, `getDepositQuote`, `getWithdrawQuote`, `getPriceImpact`. (API surface read from the SDK's `docs.md`; exact per-method param shapes — confirm in `docs.md`.)
+
 ## Tick / bin math reference
 
 - Orca & Raydium (tick model): `p(i) = 1.0001^i`, usable range **[-443636, 443636]**. Orca `TICKS_PER_ARRAY = 88`; Raydium `TICK_ARRAY_SIZE = 60`. Position bounds are multiples of `tick_spacing`.
@@ -71,4 +77,6 @@ See `backtest.md` for how to combine these into a replay.
 - **Orca:** `PositionDecoder` and a dedicated fetch-by-mint helper are not confirmed in the current monorepo (names from the legacy/standalone SDK). The "128 / 32896" dual value for the 1% fee tier is verbatim from docs, reason undocumented.
 - **Raydium:** `raydium.clmm.getPositionInfo({ nftMint })` from `code-demos.md` is absent in current `clmm.ts` — use `getOwnerPositionInfo`. No testnet addresses documented (mainnet/devnet only).
 - **Meteora:** on-chain `lb_clmm` source is closed; account/instruction fields are reconstructed from the IDL via docs (accurate, not from source).
+- **Raydium CPMM:** `raydium.cpmm.*` method names are not confirmed against the current facade (constant-product, fungible LP — out of the position-management loop by design); the CPMM program ID is verified.
+- **Meteora DAMM v2:** `@meteora-ag/cp-amm-sdk` API surface is read from the SDK's `docs.md` (class `CpAmm`, functions as listed); exact per-method param shapes — confirm in `docs.md`. DAMM v2 is constant-product (λ=1) — range management does not apply.
 - Cross-protocol alert thresholds and rebalance cadences are practical synthesis, not a single standard — calibrate to pool volatility and tx cost.

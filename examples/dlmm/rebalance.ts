@@ -17,7 +17,7 @@
  *   cp .env.example .env  # set RPC_URL + USER_PUBKEY + POOL_ADDRESS + POSITION_PUBKEY
  *   npm install && npm run rebalance -- --position <POSITION_PUBKEY>
  */
-import DLMM from "@meteora-ag/dlmm";
+import DLMM, { StrategyType } from "@meteora-ag/dlmm";
 import { Connection, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import * as dotenv from "dotenv";
@@ -47,35 +47,31 @@ async function main() {
   console.log(`[rebalance] activeBin=${activeBin.binId} ` +
     `range=[${position.positionData.lowerBinId},${position.positionData.upperBinId}]`);
 
-  // 2. Simulate a BALANCED atomic rebalance (claim fees + rewards, recenter with a Spot strategy).
-  //    StrategyType: "Spot" | "Curve" | "BidAsk" (skill/meteora-dlmm.md).
-  const strategy = {
-    minBinId: activeBin.binId - 20,
-    maxBinId: activeBin.binId + 20,
-    strategyType: "Spot" as const,
-  };
-
-  const sim = pool.simulateRebalancePositionWithBalancedStrategy(
+  // 2. Simulate a BALANCED atomic rebalance (claim fees + rewards, recenter with a Spot
+  //    strategy). StrategyType is the SDK enum (Spot | Curve | BidAsk) — a balanced strategy
+  //    recomputes the bin range from the active bin + position, so no explicit min/max here.
+  //    (skill/meteora-dlmm.md)
+  const sim = await pool.simulateRebalancePositionWithBalancedStrategy(
     position.publicKey,
     position.positionData,
-    strategy,
+    StrategyType.Spot,
     /* topUpAmountX */ new BN(0),
     /* topUpAmountY */ new BN(0),
     /* xWithdrawBps  */ new BN(10_000), // 100% withdraw
     /* yWithdrawBps  */ new BN(10_000)
   );
 
-  // 3. Build the rebalance instructions with slippage guard.
+  // 3. Build the rebalance instructions with slippage guard (maxActiveBinSlippage is a BN).
   const MAX_ACTIVE_BIN_SLIPPAGE = Number(process.env.MAX_ACTIVE_BIN_SLIPPAGE ?? 5);
-  const { initBinArrayInstructions, rebalancePositionInstruction } = pool.rebalancePosition(
+  const { initBinArrayInstructions, rebalancePositionInstruction } = await pool.rebalancePosition(
     sim,
-    MAX_ACTIVE_BIN_SLIPPAGE
+    new BN(MAX_ACTIVE_BIN_SLIPPAGE)
   );
 
   console.log(`[rebalance] SIMULATED quote:`);
   console.log(`  initBinArrayInstructions: ${initBinArrayInstructions.length}`);
   console.log(`  rebalancePositionInstruction: ${!!rebalancePositionInstruction}`);
-  console.log(`  new range: [${strategy.minBinId}, ${strategy.maxBinId}] (Spot)`);
+  console.log(`  strategy: Spot (balanced, recentered around active bin ${activeBin.binId})`);
   console.log(`  maxActiveBinSlippage: ${MAX_ACTIVE_BIN_SLIPPAGE}`);
 
   // 4. DO NOT SIGN HERE. Hand the instruction list to the user's wallet for approval.

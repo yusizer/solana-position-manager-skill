@@ -1,6 +1,6 @@
 ---
 name: solana-position-manager
-description: Manage Solana CLMM/DLMM liquidity positions across Orca Whirlpools, Raydium CLMM, and Meteora DLMM — track impermanent loss, detect out-of-range positions, and decide + execute rebalances. Use when the user asks about liquidity providing, LP positions, concentrated liquidity, impermanent loss, range management, or rebalancing on Solana.
+description: Manage Solana concentrated-liquidity (CLMM/DLMM) LP positions across Orca Whirlpools, Raydium CLMM, and Meteora DLMM, plus the constant-product baselines (Raydium CPMM, Meteora DAMM v2). Track impermanent loss, detect out-of-range positions, and decide + execute rebalances. Use when the user asks about liquidity providing, LP positions, concentrated liquidity, impermanent loss, range management, or rebalancing on Solana.
 ---
 
 # Solana Position Manager Skill
@@ -15,7 +15,7 @@ Load the focused files below **only when the task needs them** (progressive, tok
 
 | Task / intent | Load this | Then this |
 |---|---|---|
-| "Where are my positions?" / fetch a position | [`whirlpools.md`](whirlpools.md) · [`raydium-clmm.md`](raydium-clmm.md) · [`meteora-dlmm.md`](meteora-dlmm.md) (pick the protocol) | — |
+| "Where are my positions?" / fetch a position | [`whirlpools.md`](whirlpools.md) · [`raydium-clmm.md`](raydium-clmm.md) · [`meteora-dlmm.md`](meteora-dlmm.md) · [`meteora-damm-v2.md`](meteora-damm-v2.md) (pick the protocol) | — |
 | "Am I in range?" / out-of-range check | the protocol file above | [`range-alerts.md`](range-alerts.md) |
 | "What's my impermanent loss?" | [`impermanent-loss.md`](impermanent-loss.md) | the protocol file (for current tick/price) |
 | "Which range width? / IL by range" | [`benchmarks.md`](benchmarks.md) | [`impermanent-loss.md`](impermanent-loss.md) |
@@ -25,12 +25,22 @@ Load the focused files below **only when the task needs them** (progressive, tok
 | "Auto-alert via Claude Code hook" | [`hooks.md`](hooks.md) | [`monitoring.md`](monitoring.md) |
 | "Backtest this range" / fee APR vs HODL | [`backtest.md`](backtest.md) | [`impermanent-loss.md`](impermanent-loss.md) |
 | "Links / SDK packages / program IDs" | [`resources.md`](resources.md) | — |
+| "Is this AMM concentrated?" / CPMM · DAMM v2 | [`raydium-cpmm.md`](raydium-cpmm.md) · [`meteora-damm-v2.md`](meteora-damm-v2.md) | [`impermanent-loss.md`](impermanent-loss.md) (λ=1 v2 case) |
 
-## Protocols covered
+## Protocols covered — the full Solana AMM landscape
+
+**Concentrated (managed end-to-end):**
 
 - **Orca Whirlpools** — tick-range CLMM, static tiered fees. → [`whirlpools.md`](whirlpools.md)
 - **Raydium CLMM** — tick-range CLMM, Position NFT, static tiered fees. → [`raydium-clmm.md`](raydium-clmm.md)
 - **Meteora DLMM** — discrete **bin**-based liquidity, dynamic volatility-aware fees, native limit orders. → [`meteora-dlmm.md`](meteora-dlmm.md)
+
+**Constant-product (scope-clarified — the v2 baseline, λ = 1):**
+
+- **Raydium CPMM** — constant-product, fungible LP, no concentration; the full-range case of every formula. → [`raydium-cpmm.md`](raydium-cpmm.md)
+- **Meteora DAMM v2** — constant-product, NFT positions; fetch / fees / claim in scope, range/rebalance redirect to the v2 case. → [`meteora-damm-v2.md`](meteora-damm-v2.md)
+
+> A position manager's value comes from concentration (λ > 1). CPMM and DAMM v2 are λ = 1, so this skill covers their fetch/fees/claim lifecycle but does not pretend range management applies. See [`impermanent-loss.md`](impermanent-loss.md) §4.
 
 ## Core loop
 

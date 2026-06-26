@@ -5,7 +5,7 @@ Runnable TypeScript reference for the **Meteora DLMM** parts of `solana-position
 - **`monitor.ts`** — read-only position monitor with out-of-range + drift alerts. Watches a public wallet; no key, no signing, no auto-rebalance.
 - **`rebalance.ts`** — atomic DLMM rebalance (claim + remove + resize + add in one instruction) using `simulateRebalancePositionWithBalancedStrategy` + `rebalancePosition`. **Simulates and prints the quote; never signs** — you sign with your wallet (`../../rules/safe-rebalance.md`).
 
-> This is a *reference* implementation of the skill's measure → monitor → rebalance loop against a real SDK. It is **not** part of the pure-Python `examples/il_*` suite — it needs `npm install` and an RPC endpoint. It is intentionally not run in the skill's CI (which runs `validate.sh` + the Python IL tests).
+> This is a *reference* implementation of the skill's measure → monitor → rebalance loop against a real SDK. It is **not** part of the pure-Python `examples/il_*` suite — it needs `npm install` and an RPC endpoint. CI runs `npm run typecheck` (`tsc --noEmit`) on this directory to prove the typed example compiles against the real `@meteora-ag/dlmm` SDK; running `monitor` / `rebalance` needs an RPC endpoint and is not executed in CI.
 
 ## Run
 
