@@ -83,7 +83,7 @@ No existing kit skill covers the LP position lifecycle; closest references are s
 |---|---|
 | `python tests/test_il.py` | 16 / 16 IL-math tests pass (incl. v2-amplification cross-check) |
 | `python tests/test_fetch.py` | 10 / 10 position-decode + analysis tests pass (+ opt-in live-RPC test) |
-| `python tests/test_eval.py` | quantified eval: with-skill **24/24** vs baseline **10/24**; **0/12** false-positive triggers |
+| `python tests/test_eval.py` | quantified eval: with-skill **24/24** vs fair ablation baseline **16/24**; **0/12** false-positive triggers (refs derived independently of the skill's eval path) |
 | `npm run typecheck` (`examples/dlmm`) | DLMM TS example compiles clean vs real `@meteora-ag/dlmm` (`tsc --noEmit`) |
 | `./validate.sh` | structure + intra-skill links: all pass |
 | CI (`.github/workflows/validate.yml`) | validate + IL + decode + **eval** + **tsc** + installer dry-run on every push/PR |

@@ -55,7 +55,7 @@
     <span class="b"><strong>26</strong> tests</span>
     <span class="b"><strong>5</strong> AMM protocols</span>
     <span class="b"><strong>MIT</strong></span>
-    <span class="b">eval <strong>24/24</strong> vs baseline 10/24</span>
+    <span class="b">eval <strong>24/24</strong> vs baseline 16/24</span>
   </div>
   <p style="margin-top:16px"><a href="https://github.com/yusizer/solana-position-manager-skill">GitHub repo →</a> &nbsp; · &nbsp; <a href="https://github.com/solanabr/skill-bounty/pull/54">PR #54 (skill-bounty) →</a> &nbsp; · &nbsp; <a href="docs/EVAL.md">Eval report →</a></p>
 </header>
@@ -98,13 +98,13 @@ IL_v2(r) = 2√r / (1 + r) − 1                          // full-range (λ → 
 
 <section>
   <h2>Quantified evaluation</h2>
-  <p>Reproducible offline suite (<code>python tests/test_eval.py</code>, runs in CI) — with-skill vs a naive baseline across the LP lifecycle.</p>
+  <p>Reproducible offline suite (<code>python tests/test_eval.py</code>, runs in CI) — with-skill vs a fair ablation baseline (knows the common textbook cases, misses the CLMM nuance) across the LP lifecycle.</p>
   <table>
     <tr><th>Suite</th><th class="n">baseline</th><th class="n">with-skill</th><th class="n">tasks</th></tr>
-    <tr><td>IL computation</td><td class="n">1 / 6</td><td class="n ok">6 / 6</td><td class="n">6</td></tr>
-    <tr><td>In-range / drift level</td><td class="n">5 / 10</td><td class="n ok">10 / 10</td><td class="n">10</td></tr>
-    <tr><td>Rebalance decision</td><td class="n">4 / 8</td><td class="n ok">8 / 8</td><td class="n">8</td></tr>
-    <tr><td><strong>Total</strong></td><td class="n"><strong>10 / 24</strong></td><td class="n ok"><strong>24 / 24</strong></td><td class="n">24</td></tr>
+    <tr><td>IL computation</td><td class="n">4 / 6</td><td class="n ok">6 / 6</td><td class="n">6</td></tr>
+    <tr><td>In-range / drift level</td><td class="n">7 / 10</td><td class="n ok">10 / 10</td><td class="n">10</td></tr>
+    <tr><td>Rebalance decision</td><td class="n">5 / 8</td><td class="n ok">8 / 8</td><td class="n">8</td></tr>
+    <tr><td><strong>Total</strong></td><td class="n"><strong>16 / 24</strong></td><td class="n ok"><strong>24 / 24</strong></td><td class="n">24</td></tr>
     <tr><td>Trigger false-positive (false-RED on margin-in-range)</td><td class="n">—</td><td class="n ok">0 / 12</td><td class="n">12</td></tr>
   </table>
   <p>Full methodology + per-task detail: <a href="docs/EVAL.md">docs/EVAL.md</a>.</p>

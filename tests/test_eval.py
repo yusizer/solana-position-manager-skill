@@ -1,5 +1,5 @@
 """
-test_eval.py — quantified evaluation of the position-manager skill vs a naive baseline.
+test_eval.py — quantified evaluation of the position-manager skill vs a fair ablation baseline.
 
 Reproducible + offline (no network, no RPC). Runs in CI. This is NOT a unit test of a
 single formula — it measures end-to-end task correctness across the LP lifecycle, the
@@ -36,26 +36,53 @@ EPS_IL = 2e-3  # IL tolerance (fraction) — matches test_il.py
 
 
 # ----------------------------------------------------------------------------
-# Model A: baseline (no skill) — common-sense heuristics a builder writes solo.
+# Model A: baseline (no skill) — a builder who knows the COMMON textbook cases
+# (symmetric-range concentrated IL, coarse 3-level drift, "widen near the edge")
+# but NOT the general asymmetric IL formula, the RED-near-edge band, or the
+# fee-vs-IL gate that decides WIDEN-vs-HOLD and WITHDRAW. This is a fair
+# "knows some, misses the nuance" ablation — NOT a structurally-incapable
+# strawman. The gap it misses is exactly the gap the skill closes.
 # ----------------------------------------------------------------------------
 
 def baseline_il(pa, pb, p0, p):
-    """Baseline ignores concentration: uses the v2 full-range formula for every range."""
+    """Baseline knows concentrated IL for SYMMETRIC ranges [1/k, k] (the common
+    textbook case) via the amplification identity, but falls back to v2
+    (ignores concentration) for asymmetric ranges — the general-CLMM gap."""
     r = p / p0
-    return il_v2(r)
+    if abs(pa * pb - p0 * p0) / (p0 * p0) < 1e-6:  # symmetric iff pa*pb ≈ p0²
+        k = p0 / pa
+        try:
+            return il_v3_symmetric(r, k)
+        except Exception:
+            return il_v2(r)
+    return il_v2(r)  # asymmetric: baseline does not know the general formula
 
 
 def baseline_level(tick_lower, tick_upper, current):
-    """Baseline: binary in-range. Returns 'GREEN' if strictly inside, else 'OUT'."""
-    if tick_lower < current < tick_upper:
-        return "GREEN"
-    return "OUT"
+    """Baseline: 3-level drift (GREEN / YELLOW / OUT) with COARSER thresholds
+    (0.1 / 0.9). It cannot name the RED-near-edge band the skill uses (0.05/0.95)
+    — a position drifting to a dangerous edge reads as YELLOW, not RED."""
+    if not (tick_lower < current < tick_upper):
+        return "OUT"
+    span = (tick_upper - tick_lower) or 1
+    drift = (current - tick_lower) / span
+    if drift < 0.1 or drift > 0.9:
+        return "YELLOW"
+    return "GREEN"
 
 
 def baseline_rebalance(tick_lower, tick_upper, current, il_frac, fee_ratio):
-    """Baseline: rebalance iff out of range. No fee-vs-IL gate, no WIDEN/MOVE nuance."""
-    if not (tick_lower < current < tick_upper):
+    """Baseline: recenter (MOVE) when out of range; WIDEN near either edge;
+    HOLD otherwise. It has NO fee-vs-IL gate (so it widens into losing
+    positions where fees do not cover IL) and NO WITHDRAW (so it never cuts a
+    catastrophic out-of-range position — it recenters instead)."""
+    in_range = tick_lower < current < tick_upper
+    if not in_range:
         return "MOVE"
+    span = (tick_upper - tick_lower) or 1
+    drift = (current - tick_lower) / span
+    if drift < 0.1 or drift > 0.9:
+        return "WIDEN"
     return "HOLD"
 
 
@@ -102,14 +129,22 @@ def skill_rebalance(tick_lower, tick_upper, current, il_frac, fee_ratio):
 # Task suites with reference answers.
 # ----------------------------------------------------------------------------
 
-# (Pa, Pb, P0, P, reference_il) — reference from impermanent-loss.md worked examples + compute_il.
+# (Pa, Pb, P0, P, reference_il) — references are derived INDEPENDENTLY of the
+# skill's eval path (never read out of compute_il at runtime), so the IL check
+# is not self-referential:
+#  - first four: hardcoded from the worked examples in skill/impermanent-loss.md
+#    (derived from first principles, verified by reduction to v2 on full-range).
+#  - (120,240,170,190): hand-computed from the §2 closed form (sqrt-space V_LP,
+#    V_HODL) — an independent derivation; matching compute_il confirms the impl.
+#  - (0.5,2.0,1.0,0.8): the §4 amplification identity il_v3 = lambda(k)*il_v2(r),
+#    a DIFFERENT code path than skill_il() uses — a genuine cross-check.
 IL_TASKS = [
-    (140, 210, 170, 200, -0.034),      # §5 worked example
-    (0.5, 2.0, 1.0, 1.21, -0.0154),    # §4 symmetric [0.5,2], lambda~3.4
-    (0.8, 1.25, 1.0, 1.21, -0.0428),   # §4 tight [0.8,1.25], lambda~9.5
+    (140, 210, 170, 200, -0.034),      # §5 worked example (documented)
+    (0.5, 2.0, 1.0, 1.21, -0.0154),    # §4 symmetric [0.5,2], lambda~3.4 (documented)
+    (0.8, 1.25, 1.0, 1.21, -0.0428),   # §4 tight [0.8,1.25], lambda~9.5 (documented)
     (140, 210, 170, 170, 0.0),         # no move -> zero IL
-    (120, 240, 170, 190, None),        # wide range, mild move (reference computed below)
-    (0.5, 2.0, 1.0, 0.8, None),        # symmetric, move down (reference computed below)
+    (120, 240, 170, 190, -0.00971),    # wide asymmetric range — hand-computed §2
+    (0.5, 2.0, 1.0, 0.8, -0.0211),     # symmetric, move down — il_v3_symmetric §4
 ]
 
 # (tick_lower, tick_upper, current, reference_level) — strict in-range (Orca/Raydium).
@@ -156,23 +191,10 @@ TRIGGER_FP_TASKS = [
 ]
 
 
-def _ref_il(pa, pb, p0, p):
-    if pb is not None and pa < pb:
-        try:
-            return compute_il(Pa=pa, Pb=pb, P0=p0, P=p).il
-        except Exception:
-            return None
-    return None
-
-
 def run():
     il_pass_b = il_pass_s = 0
     il_details = []
     for pa, pb, p0, p, ref in IL_TASKS:
-        if ref is None:
-            ref = _ref_il(pa, pb, p0, p)
-        if ref is None:
-            continue
         b = baseline_il(pa, pb, p0, p)
         s = skill_il(pa, pb, p0, p)
         ok_b = abs(b - ref) < EPS_IL
@@ -186,9 +208,9 @@ def run():
     for tl, tu, cur, ref in DRIFT_TASKS:
         b = baseline_level(tl, tu, cur)
         s = skill_level(tl, tu, cur)
-        # baseline only has GREEN/OUT; credit it GREEN when ref is GREEN, OUT when ref is RED-out.
-        ok_b = (b == "GREEN" and ref == "GREEN") or (b == "OUT" and ref == "RED" and not (tl < cur < tu))
-        # baseline cannot name YELLOW or RED-near-edge -> those are misses
+        # baseline names GREEN/YELLOW/OUT; it maps an out-of-range RED to OUT (credit),
+        # but a RED-near-edge reads as YELLOW to it -> miss. Exact GREEN/YELLOW match.
+        ok_b = (b == ref) or (b == "OUT" and ref == "RED" and not (tl < cur < tu))
         ok_s = s == ref
         dr_pass_b += ok_b
         dr_pass_s += ok_s
@@ -197,7 +219,8 @@ def run():
     for tl, tu, cur, il, fr, ref in REBALANCE_TASKS:
         b = baseline_rebalance(tl, tu, cur, il, fr)
         s = skill_rebalance(tl, tu, cur, il, fr)
-        # baseline only emits HOLD/MOVE; WIDEN/WITHDRAW are unattainable -> misses
+        # baseline emits HOLD/MOVE/WIDEN but has NO WITHDRAW and NO fee-vs-IL gate:
+        # WITHDRAW refs are misses; it also over-widens where fees do not cover IL.
         ok_b = b == ref
         ok_s = s == ref
         rb_pass_b += ok_b
