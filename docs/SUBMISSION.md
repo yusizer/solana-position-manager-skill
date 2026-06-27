@@ -12,7 +12,7 @@ Reward: 3 000 USDG across 10 winners (1–5 = 400, 6–10 = 200)
 - [x] README (what / problem / install)
 - [x] SKILL.md entry point following kit structure (lazy router)
 - [x] MIT licensed
-- [x] `validate.sh` 38/38, **26/26 tests green** + quantified **eval 24/24 vs baseline 16/24**, CI workflow (incl. DLMM `tsc` typecheck)
+- [x] `validate.sh` 60/60, **26/26 tests green** + quantified **eval 24/24 vs baseline 16/24**, CI workflow (incl. DLMM `tsc` typecheck)
 - [x] Live GitHub Pages landing (`docs/index.html` + `deploy-pages.yml`)
 - [ ] **Submit PR link + questionnaire on the listing  ← only step left (you do this)**
 

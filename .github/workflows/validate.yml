@@ -6,11 +6,21 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
 
       - name: Structure & link check
         run: |
@@ -18,13 +28,13 @@ jobs:
           ./validate.sh
 
       - name: IL math tests
-        run: python3 tests/test_il.py
+        run: python tests/test_il.py
 
       - name: Position-decode tests
-        run: python3 tests/test_fetch.py
+        run: python tests/test_fetch.py
 
       - name: Eval suite (with-skill vs baseline)
-        run: python3 tests/test_eval.py
+        run: python tests/test_eval.py
 
       - name: DLMM TypeScript typecheck
         working-directory: examples/dlmm
@@ -34,11 +44,11 @@ jobs:
 
       - name: CLI smoke test
         run: |
-          python3 examples/il_calc.py --pa 140 --pb 210 --p0 170 --p 200 --json >/dev/null
-          python3 examples/il_calc.py --pa 140 --pb 210 --p0 170 --p 200 --principal 10000 --fees 320 --json >/dev/null
-          python3 examples/fetch_position.py --offline --current-tick 0 --open-tick 0 --json >/dev/null
+          python examples/il_calc.py --pa 140 --pb 210 --p0 170 --p 200 --json >/dev/null
+          python examples/il_calc.py --pa 140 --pb 210 --p0 170 --p 200 --principal 10000 --fees 320 --json >/dev/null
+          python examples/fetch_position.py --offline --current-tick 0 --open-tick 0 --json >/dev/null
 
-      - name: Install script dry-run
+      - name: Install script real-install test
         env:
           CLAUDE_DIR: /tmp/.claude-test
         run: ./install.sh -y --claude-dir=/tmp/.claude-test

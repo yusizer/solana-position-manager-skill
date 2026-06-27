@@ -61,7 +61,7 @@ Orca's new SDK is on `@solana/kit` (web3.js moved to legacy). Meteora's on-chain
   - Orca tick spacings: 1, 2, 4, 8, 16, 64, 96, 128, 256.
   - Raydium tick spacings: 1, 10, 60, 120.
 - Meteora (bin model): `P_i = (1 + binStep/10000)^i`, `binStep` up to 400 bps. `MAX_BIN_PER_ARRAY = 70`. Active bin is unique; position bounds inclusive.
-- In-range: Orca strict `tickLower < tickCurrent < tickUpper`; Raydium `tickLower <= tickCurrent < tickUpper`; Meteora `lowerBinId <= activeBinId <= upperBinId` (inclusive).
+- In-range: Orca `tickLower <= tickCurrent < tickUpper` (lower-inclusive, upper-exclusive — per docs.orca.so); Raydium `tickLower <= tickCurrent < tickUpper`; Meteora `lowerBinId <= activeBinId <= upperBinId` (inclusive).
 
 ## Historical data / backtest sources
 

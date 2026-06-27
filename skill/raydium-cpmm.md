@@ -36,4 +36,4 @@ const { poolInfo, poolKeys } = await raydium.cpmm.getPoolInfoFromRpc(poolId);
 
 ## Where it belongs in the AMM landscape
 
-Orca Whirlpools, Raydium CLMM, and Meteora DLMM are the **concentrated** programs this skill manages end-to-end. Raydium CPMM and AMM v4 are **constant-product** baselines (λ = 1) covered by the full-range case in [`impermanent-loss.md`](impermanent-loss.md), not active range management. See the coverage table in [`../README.md`](../README.md) and the routing in [`SKILL.md`](SKILL.md).
+Orca Whirlpools, Raydium CLMM, and Meteora DLMM are the **concentrated** programs this skill covers end-to-end (fetch → measure → decide → monitor): Meteora DLMM has an **executable** atomic rebalance; Orca and Raydium ship SDK-correct rebalance recipes (`resetPositionRangeInstructions` / close+open). Raydium CPMM and AMM v4 are **constant-product** baselines (λ = 1) covered by the full-range case in [`impermanent-loss.md`](impermanent-loss.md), not active range management. See the coverage table in [`../README.md`](../README.md) and the routing in [`SKILL.md`](SKILL.md).

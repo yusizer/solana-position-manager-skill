@@ -3,6 +3,12 @@ name: deploy-pages
 on:
   push:
     branches: [main]
+    paths:
+      - "docs/index.html"
+      - "docs/*.md"
+      - "assets/**"
+      - "README.md"
+      - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -18,27 +24,31 @@ concurrency:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build static site
         run: |
-          mkdir -p _site
+          mkdir -p _site/docs
           cp docs/index.html _site/index.html
           cp README.md _site/README.md
           cp -r assets _site/assets 2>/dev/null || true
-          cp -r docs _site/docs 2>/dev/null || true
+          # Copy the active docs, excluding the superseded historical PR_SKILL_BOUNTY.md.
+          for f in docs/EVAL.md docs/SUBMISSION.md docs/RUBRIC_CHECKLIST.md docs/DEMO.md; do
+            [ -f "$f" ] && cp "$f" _site/docs/
+          done
           echo "Built landing page -> _site/"
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v6

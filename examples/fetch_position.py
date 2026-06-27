@@ -132,11 +132,13 @@ def _build_offline_fixture() -> bytes:
 
 def analyze(pos: dict, current_tick: int, open_tick: int) -> dict:
     tl, tu = pos["tick_lower_index"], pos["tick_upper_index"]
-    in_range = tl < current_tick < tu  # Orca: strict (skill/whirlpools.md)
+    # Orca/Raydium: in range is lower-INCLUSIVE, upper-exclusive
+    # (tickLowerIndex <= tickCurrentIndex < tickUpperIndex) — see skill/range-alerts.md.
+    in_range = tl <= current_tick < tu
     span = tu - tl or 1
     drift = (current_tick - tl) / span
     il = None
-    if open_tick is not None and tl < open_tick < tu:
+    if open_tick is not None and tl <= open_tick < tu:
         r = compute_il(
             Pa=tick_to_price(tl), Pb=tick_to_price(tu),
             P0=tick_to_price(open_tick), P=tick_to_price(current_tick),

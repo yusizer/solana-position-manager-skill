@@ -69,9 +69,11 @@ const { sqrtPrice, tickCurrentIndex, liquidity, feeRate, tickSpacing } = pool.da
 ## In-range vs out-of-range
 
 ```ts
-const inRange = position.tickLowerIndex < tickCurrentIndex && tickCurrentIndex < position.tickUpperIndex;
-// strictly between. Below range (tickCurrent <= tickLower) -> 100% token B.
-// Above range (tickCurrent >= tickUpper) -> 100% token A. Fees stop accruing.
+const inRange =
+  position.tickLowerIndex <= tickCurrentIndex && tickCurrentIndex < position.tickUpperIndex;
+// lower-INCLUSIVE, upper-exclusive (matches Orca docs: active + earning fees).
+// Below range (tickCurrent < tickLower) -> 100% token B.
+// At/above upper (tickCurrent >= tickUpper) -> 100% token A. Fees stop accruing.
 ```
 
 Tick math: `p(i) = 1.0001^i`, usable tick range **[-443636, 443636]**. `TICKS_PER_ARRAY = 88`. Position bounds must be multiples of `tick_spacing` (use `getInitializableTickIndex` for rounding).

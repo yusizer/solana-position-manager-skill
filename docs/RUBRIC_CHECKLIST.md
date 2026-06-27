@@ -27,8 +27,8 @@ Superteam Brasil listing): **Usefulness · Novelty · Quality · Fit**.
 - `tests/test_fetch.py` → **10 decode + analysis tests** (+ opt-in live-RPC test).
 - `tests/test_eval.py` → **quantified eval: with-skill 24/24 vs fair ablation 16/24, 0/12 false-positive triggers**; references derived independently of the skill's eval path (not self-referential).
 - `examples/dlmm/` → `tsc --noEmit` clean vs real `@meteora-ag/dlmm` (typechecked in CI).
-- `validate.sh` → 38/38 structure + intra-skill link checks.
-- `.github/workflows/validate.yml` → CI: validate + IL + decode + **eval** + DLMM **tsc** + installer dry-run.
+- `validate.sh` → 60/60 structure + intra-skill link checks.
+- `.github/workflows/validate.yml` → CI: validate + IL + decode + **eval** + DLMM **tsc** + installer real-install test.
 - `skill/*.md` → 11 reference docs; program IDs verified against `declare_id!`/SDK docs.
 - `docs/EVAL.md` → full methodology + scope & limitations (honest about offline/synthetic).
 

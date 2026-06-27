@@ -77,10 +77,10 @@
 
 <section>
   <h2>Protocol coverage — the full Solana AMM landscape</h2>
-  <p>Three concentrated programs are managed end-to-end; two constant-product programs are covered as the v2 baseline (λ = 1) with an explicit scope explanation — so the skill knows what it does and does <em>not</em> actively manage.</p>
+  <p>Three concentrated programs are covered end-to-end (fetch → measure → decide → monitor): Meteora DLMM ships an <strong>executable</strong> atomic rebalance (<code>tsc</code>-clean SDK example), while Orca and Raydium ship SDK-correct rebalance recipes (<code>resetPositionRangeInstructions</code> / close+open). Two constant-product programs are covered as the v2 baseline (λ = 1) with an explicit scope explanation — so the skill knows what it does and does <em>not</em> actively manage.</p>
   <div class="grid">
-    <div class="card"><h4>Orca Whirlpools</h4><p>Tick-range CLMM, 216-byte Position, <code>resetPositionRangeInstructions</code>.</p><span class="tag">concentrated · managed</span></div>
-    <div class="card"><h4>Raydium CLMM</h4><p>Tick-range CLMM, Position NFT, close+open range change.</p><span class="tag">concentrated · managed</span></div>
+    <div class="card"><h4>Orca Whirlpools</h4><p>Tick-range CLMM, 216-byte Position, <code>resetPositionRangeInstructions</code>.</p><span class="tag">concentrated · covered</span></div>
+    <div class="card"><h4>Raydium CLMM</h4><p>Tick-range CLMM, Position NFT, close+open range change.</p><span class="tag">concentrated · covered</span></div>
     <div class="card"><h4>Meteora DLMM</h4><p>Bin-based, dynamic fees, atomic rebalance, limit orders.</p><span class="tag">concentrated · managed</span></div>
     <div class="card"><h4>Raydium CPMM</h4><p>Constant-product, fungible LP — full-range v2 case (λ=1).</p><span class="tag out">scope-clarified</span></div>
     <div class="card"><h4>Meteora DAMM v2</h4><p>Constant-product, NFT positions — fetch / fees / claim in scope.</p><span class="tag out">scope-clarified</span></div>

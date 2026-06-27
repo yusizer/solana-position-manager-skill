@@ -97,7 +97,10 @@ def skill_il(pa, pb, p0, p):
 
 def skill_level(tick_lower, tick_upper, current):
     """GREEN / YELLOW / RED from drift, matching examples/dlmm/monitor.ts + range-alerts.md."""
-    if not (tick_lower < current < tick_upper):
+    # In range is lower-INCLUSIVE, upper-exclusive (tickLower <= current < tickUpper),
+    # per docs.orca.so and skill/range-alerts.md — a position at the lower tick is
+    # still active and earning fees (NOT a false RED).
+    if not (tick_lower <= current < tick_upper):
         return "RED"
     span = (tick_upper - tick_lower) or 1
     drift = (current - tick_lower) / span
@@ -110,7 +113,7 @@ def skill_level(tick_lower, tick_upper, current):
 
 def skill_rebalance(tick_lower, tick_upper, current, il_frac, fee_ratio):
     """HOLD / WIDEN / MOVE / WITHDRAW, gated by fee-vs-IL (rebalance.md heuristics)."""
-    in_range = tick_lower < current < tick_upper
+    in_range = tick_lower <= current < tick_upper
     net = fee_break_even(il_frac, fee_ratio)  # >0 means fees beat IL
     if not in_range:
         # Out of range: recenter (MOVE) unless IL is catastrophic and fees never cover it.
@@ -147,12 +150,12 @@ IL_TASKS = [
     (0.5, 2.0, 1.0, 0.8, -0.0211),     # symmetric, move down — il_v3_symmetric §4
 ]
 
-# (tick_lower, tick_upper, current, reference_level) — strict in-range (Orca/Raydium).
+# (tick_lower, tick_upper, current, reference_level) — lower-inclusive in-range (Orca/Raydium).
 DRIFT_TASKS = [
     (-55440, 55440, 0, "GREEN"),       # dead center
-    (-55440, 55440, 50000, "RED"),     # drift = 50000/110880 = 0.90 -> YELLOW? 0.90 -> YELLOW
-    (-55440, 55440, -52000, "RED"),    # drift = 0.03 -> RED (near lower edge)
-    (-55440, 55440, 55440, "RED"),     # at upper edge (strict < -> out)
+    (-55440, 55440, 50000, "RED"),     # drift = 105440/110880 = 0.951 -> RED
+    (-55440, 55440, -52000, "RED"),    # drift = 3440/110880 = 0.031 -> RED (near lower edge)
+    (-55440, 55440, 55440, "RED"),     # at upper edge (upper-exclusive -> out)
     (-1000, 1000, 0, "GREEN"),
     (-1000, 1000, 850, "YELLOW"),      # drift = 1850/2000 = 0.925 -> YELLOW
     (-1000, 1000, 960, "RED"),         # drift = 0.98 -> RED
